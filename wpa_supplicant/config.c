@@ -4774,6 +4774,8 @@ void wpa_config_debug_dump_networks(struct wpa_config *config)
 		wpa_printf(MSG_DEBUG, "Priority group %d",
 			   ssid->priority);
 		while (ssid) {
+			wpa_printf(MSG_DEBUG, "   macsec_policy=%d eapol_dest_addr=" MACSTR,
+				   MAC2STR(ssid->eapol_dest_addr), ssid->macsec_policy);
 			wpa_printf(MSG_DEBUG, "   id=%d ssid='%s'",
 				   ssid->id,
 				   wpa_ssid_txt(ssid->ssid, ssid->ssid_len));
