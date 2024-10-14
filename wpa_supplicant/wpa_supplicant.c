@@ -381,6 +381,8 @@ void wpa_supplicant_initiate_eapol(struct wpa_supplicant *wpa_s)
 	eapol_sm_notify_config(wpa_s->eapol, &ssid->eap, &eapol_conf);
 
 #ifdef CONFIG_MACSEC
+	wpa_dbg(wpa_s, MSG_DEBUG, "Allocating 802.1X with dest_eapol_addr: " MACSTR,
+		MAC2STR(ssid->eapol_dest_addr));
 	if (wpa_s->key_mgmt == WPA_KEY_MGMT_NONE && ssid->mka_psk_set)
 		ieee802_1x_create_preshared_mka(wpa_s, ssid);
 	else

@@ -3536,6 +3536,9 @@ ieee802_1x_kay_init(struct ieee802_1x_kay_ctx *ctx, enum macsec_policy policy,
 
 	os_memcpy(kay->eapol_dest_addr, eapol_dest_addr, ETH_ALEN);
 
+	wpa_printf(MSG_DEBUG, "KaY: state machine creation - eapol_dest_addr: " MACSTR,
+			MAC2STR(eapol_dest_addr));
+
 	os_memcpy(kay->algo_agility, mka_algo_agility,
 		  sizeof(kay->algo_agility));
 
