@@ -418,6 +418,17 @@ struct wpa_ssid {
 	 */
 	unsigned int eap_workaround;
 
+	/**
+	 * eapol_dest_addr - mac addr for EAPOL packets (802.11AE-2018+ etc.)
+	 * EAPOL packets may have their destination MAC address set to any
+	 * non-individual (i.g. multi-cast) address, including the ethernet
+	 * broadcast address (ff:ff:ff:ff:ff:ff).  Choice of destination
+	 * address is dictated by which types of entity (should) filter them
+	 * out vs. act on their contents vs. relay them.
+	 * See 802.11X-2020 Table 11-1
+	 */
+        u8 eapol_dest_addr[ETH_ALEN];
+
 #endif /* IEEE8021X_EAPOL */
 
 	/**

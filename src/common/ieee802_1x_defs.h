@@ -83,4 +83,12 @@ enum confidentiality_offset {
 #define DEFAULT_PRIO_GROUP_CA_MEMBER   0x70
 #define DEFAULT_PRIO_NOT_KEY_SERVER    0xFF
 
+/*
+ * Nearest non-TPMR (non Two Port MAC Relay) Bridge group address,
+ * also referred to as IEEE Std 802.1X PAE address
+ * IEEE Std 802.1X-2020 - Table 11-1
+ */
+
+#define PAE_GROUP_ADDRESS { 0x01, 0x80, 0xc2, 0x00, 0x00, 0x03 }
+
 #endif /* IEEE802_1X_DEFS_H */

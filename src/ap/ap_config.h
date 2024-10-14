@@ -301,6 +301,7 @@ struct hostapd_bss_config {
 	int eapol_version;
 	int eap_server; /* Use internal EAP server instead of external
 			 * RADIUS server */
+	u8 eapol_dest_addr[ETH_ALEN];
 	struct hostapd_eap_user *eap_user;
 	char *eap_user_sqlite;
 	char *eap_sim_db;

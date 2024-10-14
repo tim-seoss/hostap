@@ -21,6 +21,9 @@
 #include "config.h"
 
 
+static const u8 pae_group_addr[ETH_ALEN] = PAE_GROUP_ADDRESS;
+
+
 #if !defined(CONFIG_CTRL_IFACE) && defined(CONFIG_NO_CONFIG_WRITE)
 #define NO_CONFIG_WRITE
 #endif
@@ -1663,6 +1666,30 @@ static int wpa_config_parse_eap(const struct parse_data *data,
 }
 
 
+static int wpa_config_parse_eapol_dest_addr(const struct parse_data *data,
+					    struct wpa_ssid *ssid, int line,
+					    const char *value)
+{
+	wpa_printf(MSG_DEBUG, "value: '%s'", value);
+
+	if (value[0] == '\0' || os_strcmp(value, "\"\"") == 0 ||
+	    os_strcmp(value, "default") == 0) {
+		os_memcpy(ssid->eapol_dest_addr, pae_group_addr, ETH_ALEN);
+		wpa_printf(MSG_DEBUG, "EAPOL using PAE (default) destination MAC address" MACSTR,
+			MAC2STR(ssid->eapol_dest_addr));
+		return 0;
+	}
+	if (hwaddr_aton2(value, ssid->eapol_dest_addr) == -1) {
+		wpa_printf(MSG_ERROR, "Line %d: Invalid EAPOL destination MAC address '%s'.",
+			   line, value);
+		return -1;
+	}
+	wpa_printf(MSG_DEBUG, "EAPOL destination MAC address " MACSTR,
+		   MAC2STR(ssid->eapol_dest_addr));
+	return 0;
+}
+
+
 #ifndef NO_CONFIG_WRITE
 static char * wpa_config_write_eap(const struct parse_data *data,
 				   struct wpa_ssid *ssid)
@@ -1696,6 +1723,28 @@ static char * wpa_config_write_eap(const struct parse_data *data,
 	end[-1] = '\0';
 
 	return buf;
+}
+
+
+static char * wpa_config_write_eapol_dest_addr(const struct parse_data *data,
+					       struct wpa_ssid *ssid)
+{
+	char *value;
+	int res;
+
+	if (is_zero_ether_addr(ssid->eapol_dest_addr))
+		return NULL;
+
+	value = os_malloc(20);
+	if (value == NULL)
+		return NULL;
+	res = os_snprintf(value, 20, MACSTR, MAC2STR(ssid->eapol_dest_addr));
+	if (os_snprintf_error(20, res)) {
+		os_free(value);
+		return NULL;
+	}
+	value[20 - 1] = '\0';
+	return value;
 }
 #endif /* NO_CONFIG_WRITE */
 
@@ -2549,6 +2598,7 @@ static const struct parse_data ssid_fields[] = {
 	{ INT(vht_center_freq2) },
 #ifdef IEEE8021X_EAPOL
 	{ FUNC(eap) },
+	{ FUNC(eapol_dest_addr) },
 	{ STR_LENe(identity, identity) },
 	{ STR_LENe(anonymous_identity, anonymous_identity) },
 	{ STR_LENe(imsi_identity, imsi_identity) },
@@ -3236,6 +3286,7 @@ void wpa_config_set_network_defaults(struct wpa_ssid *ssid)
 	ssid->eap_workaround = DEFAULT_EAP_WORKAROUND;
 	ssid->eap.fragment_size = DEFAULT_FRAGMENT_SIZE;
 	ssid->eap.sim_num = DEFAULT_USER_SELECTED_SIM;
+	os_memcpy(ssid->eapol_dest_addr, pae_group_addr, ETH_ALEN);
 #endif /* IEEE8021X_EAPOL */
 #ifdef CONFIG_MESH
 	ssid->dot11MeshMaxRetries = DEFAULT_MESH_MAX_RETRIES;
