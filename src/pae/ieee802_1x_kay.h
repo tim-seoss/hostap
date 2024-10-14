@@ -234,6 +234,8 @@ struct ieee802_1x_kay {
 
 	enum validate_frames vf;
 	enum confidentiality_offset co;
+
+	u8 eapol_dest_addr[ETH_ALEN];
 };
 
 
@@ -243,7 +245,8 @@ struct ieee802_1x_kay *
 ieee802_1x_kay_init(struct ieee802_1x_kay_ctx *ctx, enum macsec_policy policy,
 		    bool macsec_replay_protect, u32 macsec_replay_window,
 		    u8 macsec_offload, u16 port, u8 priority,
-		    u32 macsec_csindex, const char *ifname, const u8 *addr);
+		    u32 macsec_csindex,
+		    const u8 *eapol_dest_addr, const char *ifname, const u8 *addr);
 void ieee802_1x_kay_deinit(struct ieee802_1x_kay *kay);
 
 struct ieee802_1x_mka_participant *

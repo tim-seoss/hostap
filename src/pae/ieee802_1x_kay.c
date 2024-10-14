@@ -2451,10 +2451,6 @@ ieee802_1x_kay_decide_macsec_use(
 	return 0;
 }
 
-static const u8 pae_group_addr[ETH_ALEN] = {
-	0x01, 0x80, 0xc2, 0x00, 0x00, 0x03
-};
-
 
 /**
  * ieee802_1x_kay_encode_mkpdu -
@@ -2468,7 +2464,8 @@ ieee802_1x_kay_encode_mkpdu(struct ieee802_1x_mka_participant *participant,
 	struct ieee802_1x_hdr *eapol_hdr;
 
 	ether_hdr = wpabuf_put(pbuf, sizeof(*ether_hdr));
-	os_memcpy(ether_hdr->dest, pae_group_addr, sizeof(ether_hdr->dest));
+	os_memcpy(ether_hdr->dest, participant->kay->eapol_dest_addr,
+		  sizeof(ether_hdr->dest));
 	os_memcpy(ether_hdr->src, participant->kay->actor_sci.addr,
 		  sizeof(ether_hdr->dest));
 	ether_hdr->ethertype = host_to_be16(ETH_P_EAPOL);
@@ -3495,7 +3492,8 @@ struct ieee802_1x_kay *
 ieee802_1x_kay_init(struct ieee802_1x_kay_ctx *ctx, enum macsec_policy policy,
 		    bool macsec_replay_protect, u32 macsec_replay_window,
 		    u8 macsec_offload, u16 port, u8 priority,
-		    u32 macsec_csindex, const char *ifname, const u8 *addr)
+		    u32 macsec_csindex,
+		    const u8 *eapol_dest_addr, const char *ifname, const u8 *addr)
 {
 	struct ieee802_1x_kay *kay;
 
@@ -3535,6 +3533,8 @@ ieee802_1x_kay_init(struct ieee802_1x_kay_ctx *ctx, enum macsec_policy policy,
 	kay->macsec_csindex = macsec_csindex;
 	kay->mka_algindex = DEFAULT_MKA_ALG_INDEX;
 	kay->mka_version = MKA_VERSION_ID;
+
+	os_memcpy(kay->eapol_dest_addr, eapol_dest_addr, ETH_ALEN);
 
 	os_memcpy(kay->algo_agility, mka_algo_agility,
 		  sizeof(kay->algo_agility));
