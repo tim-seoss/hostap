@@ -29,6 +29,9 @@
 #include "driver.h"
 #include "driver_wired_common.h"
 
+/* TODO delete */
+#include "utils/trace.h"
+
 #define DRV_PREFIX "macsec_linux: "
 
 #define UNUSED_SCI 0xffffffffffffffff
@@ -64,6 +67,7 @@ struct macsec_drv_data {
 	int ifi;
 	int parent_ifi;
 	int use_pae_group_addr;
+	u8 eapol_dest_addr[ETH_ALEN];
 
 	bool created_link;
 
@@ -306,17 +310,25 @@ out_free:
 	return err;
 }
 
+const u8 bcast[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
 static void * macsec_drv_wpa_init(void *ctx, const char *ifname)
 {
 	struct macsec_drv_data *drv;
 
+	wpa_trace_show("test backtrace");
 	if (macsec_check_macsec() < 0)
 		return NULL;
 
 	drv = os_zalloc(sizeof(*drv));
 	if (!drv)
 		return NULL;
+
+	wpa_printf(MSG_ERROR,
+			DRV_PREFIX "drv eapol_dest_addr: %s", drv->eapol_dest_addr);
+
+	// FIXME get eapol_dest_addr from callee
+	os_memcpy(drv->eapol_dest_addr, bcast, ETH_ALEN);
 
 	if (driver_wired_init_common(&drv->common, ifname, ctx) < 0) {
 		os_free(drv);
@@ -1572,6 +1584,10 @@ static int macsec_drv_init_sockets(struct macsec_drv_data *drv, u8 *own_addr)
 	}
 
 	/* filter multicast address */
+	/* FIXME is this correct with respect to the standards?
+	 * Would it be better to just accept all multicast packets?
+	 * Is it possible to filter by Ethertype?
+	 */
 	if (wired_multicast_membership(drv->common.sock, ifr.ifr_ifindex,
 				       pae_group_addr, 1) < 0) {
 		wpa_printf(MSG_ERROR, "wired: Failed to add multicast group "
@@ -1617,6 +1633,7 @@ static void * macsec_drv_hapd_init(struct hostapd_data *hapd,
 	os_strlcpy(drv->common.ifname, params->ifname,
 		   sizeof(drv->common.ifname));
 	drv->use_pae_group_addr = params->use_pae_group_addr;
+	os_memcpy(drv->eapol_dest_addr, params->eapol_dest_addr, ETH_ALEN);
 
 	if (macsec_drv_init_sockets(drv, params->own_addr)) {
 		os_free(drv);
@@ -1659,7 +1676,7 @@ static int macsec_drv_send_eapol(void *priv, const u8 *addr,
 		return -1;
 	}
 
-	os_memcpy(hdr->dest, drv->use_pae_group_addr ? pae_group_addr : addr,
+	os_memcpy(hdr->dest, drv->use_pae_group_addr ? drv->eapol_dest_addr : addr,
 		  ETH_ALEN);
 	os_memcpy(hdr->src, own_addr, ETH_ALEN);
 	hdr->ethertype = htons(ETH_P_PAE);
@@ -1679,12 +1696,23 @@ static int macsec_drv_send_eapol(void *priv, const u8 *addr,
 	return res;
 }
 
+static int macsec_drv_get_bssid(void *priv, u8 *bssid)
+{
+	struct macsec_drv_data *drv = priv;
+
+	/* Report eapol_dest_addr as the "BSSID" for wired connections. */
+	os_memcpy(bssid, drv->eapol_dest_addr, ETH_ALEN);
+	wpa_printf(MSG_ERROR,
+			"%s: XXXXXXX " MACSTR,
+			__func__, MAC2STR(drv->eapol_dest_addr));
+	return 0;
+}
 
 const struct wpa_driver_ops wpa_driver_macsec_linux_ops = {
 	.name = "macsec_linux",
 	.desc = "MACsec Ethernet driver for Linux",
 	.get_ssid = driver_wired_get_ssid,
-	.get_bssid = driver_wired_get_bssid,
+	.get_bssid = macsec_drv_get_bssid,
 	.get_capa = driver_wired_get_capa,
 	.init = macsec_drv_wpa_init,
 	.deinit = macsec_drv_wpa_deinit,

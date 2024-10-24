@@ -575,6 +575,16 @@ static void write_eap(FILE *f, struct wpa_ssid *ssid)
 		fprintf(f, "\teap=%s\n", value);
 	os_free(value);
 }
+
+// FIXME default is probably declred wrong?
+static void write_eapol_dest_addr(FILE *f, struct wpa_ssid *ssid)
+{
+	char *value = wpa_config_get(ssid, "eapol_dest_addr");
+	if (value == NULL)
+		return;
+	fprintf(f, "\teapol_dest_addr=%s\n", value);
+	os_free(value);
+}
 #endif /* IEEE8021X_EAPOL */
 
 
@@ -772,6 +782,7 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
 	INTe(ocsp2, phase2_cert.ocsp);
 	INTe(machine_ocsp, machine_cert.ocsp);
 	INT_DEFe(sim_num, sim_num, DEFAULT_USER_SELECTED_SIM);
+	write_eapol_dest_addr(f, ssid);
 #endif /* IEEE8021X_EAPOL */
 	INT(mode);
 	INT(no_auto_peer);

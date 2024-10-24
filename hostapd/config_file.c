@@ -3387,6 +3387,12 @@ static int hostapd_config_fill(struct hostapd_config *conf,
 #endif /* RADIUS_SERVER */
 	} else if (os_strcmp(buf, "use_pae_group_addr") == 0) {
 		bss->use_pae_group_addr = atoi(pos);
+	} else if (os_strcmp(buf, "eapol_dest_addr") == 0) {
+		if (hwaddr_aton2(pos, bss->eapol_dest_addr)) {
+			wpa_printf(MSG_ERROR, "Line %d: Invalid eapol_dest_addr '%s'",
+				   line, pos);
+			return 1;
+		}
 	} else if (os_strcmp(buf, "hw_mode") == 0) {
 		if (os_strcmp(pos, "a") == 0)
 			conf->hw_mode = HOSTAPD_MODE_IEEE80211A;

@@ -2609,6 +2609,7 @@ struct wpa_init_params {
 	const char *ifname;
 	const char *driver_params;
 	int use_pae_group_addr;
+	u8 eapol_dest_addr[ETH_ALEN];
 	char **bridge;
 	size_t num_bridge;
 

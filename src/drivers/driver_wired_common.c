@@ -237,6 +237,7 @@ int driver_wired_init_common(struct driver_wired_common_data *common,
 	    driver_wired_set_ifflags(ifname, flags | IFF_UP) == 0)
 		common->iff_up = 1;
 
+	/* FIXME */
 	if (wired_multicast_membership(common->pf_sock,
 				       if_nametoindex(common->ifname),
 				       pae_group_addr, 1) == 0) {

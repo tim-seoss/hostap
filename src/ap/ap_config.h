@@ -469,10 +469,95 @@ struct hostapd_bss_config {
 	int radius_server_acct_port;
 	int radius_server_ipv6;
 
-	int use_pae_group_addr; /* Whether to send EAPOL frames to PAE group
-				 * address instead of individual address
-				 * (for driver_wired.c).
-				 */
+        int use_pae_group_addr; /* Whether to send EAPOL frames to PAE group
+                                 * address instead of individual address
+                                 * (for driver_wired.c).
+                                 *
+                                 * n.b. during the setup phase, the PAE group
+                                 * address will always be used.
+                                 */
+
+        /*
+         * The eapol_dest_addr setting allows you to specify the desination
+         * hardware address (MAC address) to use use for EAPOL (Extensible
+         * Authentication Protocol over LAN) frames.
+         *
+         * If this is not specified, then the Port Access Entity (PAE) address
+         * of 01:80:c2:00:00:03 is used, as specified in the original version of
+         * IEEE 802.1X.
+         *
+         * Operation and purpose is similar to the Cisco "eapol
+         * destination-address" setting, the Juniper "eapol-address" setting and
+         * the HP Procurve "eapol-destination-mac" setting.
+         *
+         * Ethernet switches must not forward these packets with a desination
+         * mac address of 01:80:c2:00:00:03 according to the IEEE specification
+         * for switches (802.11D and successors), although some managed switches
+         * have settings to override this.
+         *
+         * This can prevent the use of 802.1X-managed MACsec if intermediate
+         * switches lack MACsec support, are under third party control (e.g. in
+         * data centre environments, or when multi-site connectivity is provided
+         * by ISPs etc.), or for some other reason it is undesirable to
+         * terminate the MACsec protection at the nearest switch.
+         *
+         * To overcome this limitation, 802.1ae-2018 extended the use of
+         * 802.1X-managed MACsec to third-party environments by specifying
+         * alternative EAPOL destination address to be used by different device
+         * types.
+         */
+
+        /* In order of least widely filtered to most widely filtered, the IEEE
+         * 802.11AE-2018 standard values are:
+         *
+         * 01:80:c2:00:00:1f ("EDE-CC")
+         *
+         * This address is intended to be used by Ethernet Data Encryption
+         * devices in Customer to Customer mode ("EDE-CC").  All Ethernet frame
+         * forwarding devices except EDE-CC themselves should pass these i.e.
+         * these should be received by all devices on the local Ethernet segment
+         * as far as and including the first EDE-CC encountered.
+         *
+         *
+         * 01:80:c2:00:00:00 ("Bridge Group Address").
+         *
+         * These should be filtered by devices which filter ECE-CC packets, and
+         * also by customer bridges and PEBs with multiple PEPs. (FIXME define).
+         *
+         *
+         * 01:80:c2:00:00:0b ("EDE-SS")
+         *
+         * Intended to be used by Ethernet Data Encryption devices in Supplier
+         * to Supplier mode.  e.g. by ISPs providing managed transparent
+         * encrypted tunnels to their customers over their own layer 2 networks.
+         *
+         * EDE-SS packets should be filtered as-above and also by PEB C-VLAN
+         * with single PEP. (FIXME define).
+         *
+         *
+         * 01:80:c2:00:00:03 (the "Port Access Entity" address)
+         *
+         * The Port Access Entity address is the original desination address
+         * 802.1X-2001, and is also the default setting if none is specified.
+         *
+         * PEP packages should be filtered as-above and also by any switch.
+         *
+         *
+         * 01:80:c2:00:00:0e (the "Nearest Bridge Group" address) - default.
+         *
+         * Filtered as-above and also by any two port bridge.
+         *
+         *
+         * Non-standard values:
+         *
+         * The Ethernet broadcast address should not be filtered by any devices.
+         * This may have security and/or performance implications:
+         * ff:ff:ff:ff:ff:ff
+         *
+         * The unicast mac address of the desination device can also be used if
+         * it is known in advance and is unlikely to change.
+         *
+         */
 
 	int ap_max_inactivity;
 	int bss_max_idle;

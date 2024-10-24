@@ -240,6 +240,8 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
 	params.ifname = hapd->conf->iface;
 	params.driver_params = hapd->iconf->driver_params;
 	params.use_pae_group_addr = hapd->conf->use_pae_group_addr;
+	os_memcpy(params.eapol_dest_addr, hapd->conf->eapol_dest_addr,
+		  ETH_ALEN);
 
 	params.num_bridge = hapd->iface->num_bss;
 	params.bridge = os_calloc(hapd->iface->num_bss, sizeof(char *));

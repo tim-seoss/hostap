@@ -49,6 +49,7 @@ struct wpa_driver_wired_data {
 
 	int dhcp_sock; /* socket for dhcp packets */
 	int use_pae_group_addr;
+	u8 eapol_dest_addr[ETH_ALEN];
 };
 
 
@@ -302,7 +303,7 @@ static int wired_send_eapol(void *priv, const u8 *addr,
 		return -1;
 	}
 
-	os_memcpy(hdr->dest, drv->use_pae_group_addr ? pae_group_addr : addr,
+	os_memcpy(hdr->dest, drv->use_pae_group_addr ? drv->eapol_dest_addr : addr,
 		  ETH_ALEN);
 	os_memcpy(hdr->src, own_addr, ETH_ALEN);
 	hdr->ethertype = htons(ETH_P_PAE);
